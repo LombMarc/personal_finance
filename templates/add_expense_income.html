@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Expense/Income - Personal Finance App</title>
+</head>
+<body>
+    <h1>Add Expense/Income</h1>
+
+    <form method="post" action="{{ url_for('add_expense_income') }}">
+        <label for="amount">Amount:</label>
+        <input type="number" step="0.01" id="amount" name="amount" required><br><br>
+
+        <label for="category">Category:</label>
+        <select id="category" name="category" required>
+            <!-- Loop through your categories and generate options here -->
+        </select><br><br>
+
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br><br>
+
+        <input type="submit" value="Add">
+    </form>
+</body>
+</html>
