@@ -31,14 +31,10 @@ def add_expense_income():
 def display_data():
     return render_template('display_data.html')
 
-
-
-'''
-
 # Route to add a new category
-@app.route('/add_category', methods=['POST'])
+@app.route('/manage_categories', methods=['POST'])
 def add_category():
-    category_name = request.form['category_name']
+    category_name = request.form['new_category']
 
     # Create a new CategoryAvailable instance
     new_category = CategoryAvailable(category=category_name)
@@ -48,6 +44,10 @@ def add_category():
     db.session.commit()
 
     return redirect(url_for('home'))
+
+'''
+
+
 
 
 # Route to add an expense/income

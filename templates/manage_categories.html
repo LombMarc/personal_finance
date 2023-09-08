@@ -5,7 +5,11 @@
 </head>
 <body>
     <h1>Manage Categories</h1>
+<form method="post" action="{{ url_for('add_expense_income') }}">
+        <label for="new category">New category:</label>
+        <input type="string" id="new category" name="new_category" required><br><br>
 
-    <!-- Add your content for managing categories here -->
+    <input type="submit" value="Add">
+</form>
 </body>
 </html>

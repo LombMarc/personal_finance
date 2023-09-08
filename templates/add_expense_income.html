@@ -12,7 +12,9 @@
 
         <label for="category">Category:</label>
         <select id="category" name="category" required>
-            <!-- Loop through your categories and generate options here -->
+            {% for category in categories %}
+        <option value="{{ category[0] }}">{{ category[0] }}</option>
+            {% endfor %}
         </select><br><br>
 
         <label for="date">Date:</label>
