@@ -114,14 +114,22 @@ def sing_up():
                 "Password must contain at least 1 uppercase letter, 1 digit, 1 special character, and be at least 8 characters long.",
                 category='error')
         else:
-            print("Inserting into db")
             hash = generate_password_hash(pw1,"scrypt")
             insert_db(db,"INSERT INTO users (username, hash) VALUES (?, ?)", username,hash)
-            print("Inserted")
-            flash("Account created", category='success')
+
             user = query_db(db,"SELECT * FROM users WHERE username = ?",username)
-            print(user)
             user = User(id=user[0]['id'], username=user[0]['username'], password_hash=user[0]['hash'])
+            user_id = User.get_id()
+            #add default expense category
+            query = (f"""INSERT INTO user_categories (user_id, category_id) VALUES
+                            ({user_id}, 1), -- Paycheck
+                            ({user_id}, 2), -- Bonus
+                            ({user_id}, 3), -- Grocery
+                            ({user_id}, 4), -- Fun
+                            ({user_id}, 5), -- Bills
+                            ({user_id}, 6); -- Taxes""")
+            insert_db()
+            flash("Account created", category='success')
             login_user(user, remember=True)
             return redirect(url_for("home"))
     return render_template("signup.html",user=current_user)
@@ -134,8 +142,7 @@ def home():
 
     list_category = ["Paycheck","Grocery","Health","Clothing","Bills","Fun"]
     user_id =current_user.id
-    #category = db.session.query(User.category).filter_by(id=user_id)
-
+    category = query_db(db,"SELECT category FROM categories AS cat INNER JOIN user_categories AS uca on uca.category_id = cat.id WHERE uca.user_id = ?;",user_id)
     #get this list from the SQL table, initialize it with just 1 value then let user add what they want
     if request.method=="POST":
         if "submit_expense" in request.form:
@@ -152,10 +159,12 @@ def home():
             if custom_category=="":
                 flash("Insert custom category","error")
             else:
-                #db.session.add()
+                insert_db(db,"INSERT INTO categories (category) VALUES (?);",custom_category)
+                cat_id = query_db(db,"SELECT id FROM categories WHERE category = ?",custom_category)[0].get('id')
+                insert_db(db, "INSERT INTO user_categories (user_id, category_id) VALUES (?,?);", user_id, cat_id)
                 flash("Custom category inserted","success")
 
-    return render_template('home.html',options=list_category,user=current_user)
+    return render_template('home.html',options=[i.get('category') for i in category],user=current_user)
 
 @app.route("/summary",methods=["GET"])
 def summary():

@@ -1,0 +1,7 @@
+.container {
+  display: flex;
+}
+
+.left, .categories {
+  flex: 1;
+}
