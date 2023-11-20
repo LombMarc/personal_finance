@@ -1,3 +1,4 @@
+
 ## CS50 Final project
 This is a web app that should be used to track personal expenses. 
 
@@ -12,9 +13,10 @@ In order to deploy the package follow the first_deployment bash file instruction
 - working directory: /home/<your_username>
 <br>
 and as WSGI configuration:
+
+
 ```
 import sys
-
 path = '/home/<your_username>/personal_finance/webapp'
 if path not in sys.path:
     sys.path.append(path)
