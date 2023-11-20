@@ -11,9 +11,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = '1036359838298206420470379712328124'
 
-script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
-parent_dir = os.path.abspath(os.path.join(script_dir, '../..'))
-db = os.path.join(parent_dir, 'tracker.db')
+db = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tracker.db')
 
 
 
