@@ -1,5 +1,5 @@
 import sqlite3
-import os
+import os,sys
 from flask import render_template,request,flash,redirect,url_for
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,login_required,logout_user,current_user, UserMixin, LoginManager
@@ -10,7 +10,10 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = '1036359838298206420470379712328124'
-db = db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tracker.db')
+
+script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+parent_dir = os.path.abspath(os.path.join(script_dir, '../..'))
+db = os.path.join(parent_dir, 'tracker.db')
 
 
 
@@ -156,6 +159,7 @@ def home():
             except:
                 flash("Insert a number",category="error")
             flash("Transaction inserted", category="success")
+            return redirect(url_for("home"))
         elif "submit_category" in request.form:
             custom_category= request.form.get("category_add")
             if custom_category=="":
@@ -165,6 +169,7 @@ def home():
                 cat_id = query_db(db,"SELECT id FROM categories WHERE category = ?",custom_category)[0].get('id')
                 insert_db(db, "INSERT INTO user_categories (user_id, category_id) VALUES (?,?);", user_id, cat_id)
                 flash("Custom category inserted","success")
+                return redirect(url_for("home"))
 
     return render_template('home.html',options=[i.get('category') for i in category],user=current_user)
 
@@ -174,4 +179,5 @@ def summary():
     return render_template("summary.html",user=current_user)
 
 if __name__ == '__main__':
+    db = "tracker.db"
     app.run(debug=True)
