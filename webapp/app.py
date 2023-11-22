@@ -1,10 +1,12 @@
+import datetime
 import sqlite3
 import os,sys
 from flask import render_template,request,flash,redirect,url_for
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,login_required,logout_user,current_user, UserMixin, LoginManager
 from flask import Flask
-
+import plotly.express as px
+import plotly.offline as opy
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -70,6 +72,71 @@ def insert_db(db, query, *args):
     except Exception as e:
         print("An error occurred when inserting data into the database: ", e)
         return -1  # Return a code indicating an error
+
+def dict_of_list(list_of_dicts):
+    dict_of_lists = {}
+    for d in list_of_dicts:
+        for key, value in d.items():
+            if key in dict_of_lists:
+                dict_of_lists[key].append(value)
+            else:
+                dict_of_lists[key] = [value]
+    return dict_of_lists
+
+
+
+def create_summary_figures(data,user_id,month,year):
+    month_dict = {
+        '01': 'January',
+        '02': 'February',
+        '03': 'March',
+        '04': 'April',
+        '05': 'May',
+        '06': 'June',
+        '07': 'July',
+        '08': 'August',
+        '09': 'September',
+        '10': 'October',
+        '11': 'November',
+        '12': 'December'
+    }
+    plotly_data = dict_of_list(data)
+    fig = px.bar(plotly_data, x='category', y='tot', labels={'tot':'Amount','category':'Categories'})
+    fig = fig.update_layout(
+        title=f'Categories on {month_dict[month]} - {year}',
+        xaxis_title='Categories',
+        yaxis_title='amount',
+        showlegend=False
+    )
+    fig = opy.plot(fig, auto_open=False, output_type='div')
+    # General query
+    query = """
+                SELECT 
+                  strftime('%m', time_inserted) as month, 
+                  SUM(amount) AS residual_liquidity,
+                  SUM(SUM(amount)) OVER (ORDER BY strftime('%m', time_inserted) ASC) AS cumulative_residual_liquidity
+                FROM transactions 
+                WHERE user_id = ? AND strftime('%Y', time_inserted) = ?
+                GROUP BY month
+                ORDER BY month ASC;
+                    """
+    monthly_summary = dict_of_list(query_db(db, query, user_id,year))
+    monthly_summary['month'] = [month_dict[i] for i in monthly_summary['month']]
+
+    fig_mon = px.line(monthly_summary, x='month', y='cumulative_residual_liquidity', markers=True,
+                      labels={'cumulative_residual_liquidity': 'Cumulative Residual Liquidity'})
+    fig_mon = fig_mon.add_bar(x=monthly_summary['month'], y=monthly_summary['residual_liquidity'],
+                              name='Monthly residual')
+    fig_mon = fig_mon.update_layout(
+        title='Monthly Summary',
+        xaxis_title='Month',
+        yaxis_title='Liquidity',
+        legend_title='Liquidity Type',
+        showlegend=False
+    )
+    fig_mon = opy.plot(fig_mon, auto_open=False, output_type='div')
+    return fig, fig_mon
+
 
 @app.route("/login",methods=['POST','GET'])
 def login():
@@ -142,9 +209,7 @@ def sing_up():
 def home():
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
-
-    list_category = ["Paycheck","Grocery","Health","Clothing","Bills","Fun"]
-    user_id =current_user.id
+    user_id = current_user.id
     category = query_db(db,"SELECT category FROM categories AS cat INNER JOIN user_categories AS uca on uca.category_id = cat.id WHERE uca.user_id = ?;",user_id)
     #get this list from the SQL table, initialize it with just 1 value then let user add what they want
     if request.method=="POST":
@@ -152,11 +217,17 @@ def home():
             amount = request.form.get("expense")
             category_exp = request.form.get("category_exp")
             date = request.form.get("dateInsertion")
+            if date == "":
+                date = datetime.date.today().strftime("%Y-%m-%d")
             try:
                 amount = float(amount)
             except:
                 flash("Insert a number",category="error")
-            flash("Transaction inserted", category="success")
+            try:
+                insert_db(db,"INSERT INTO transactions (user_id,category,amount,time_inserted) VALUES (?,?,?,?)",user_id,category_exp,amount,date)
+                flash("Transaction inserted", category="success")
+            except:
+                flash("Error occurred when inserting data",category="error")
             return redirect(url_for("home"))
         elif "submit_category" in request.form:
             custom_category= request.form.get("category_add")
@@ -169,12 +240,49 @@ def home():
                 flash("Custom category inserted","success")
                 return redirect(url_for("home"))
 
-    return render_template('home.html',options=[i.get('category') for i in category],user=current_user)
+    return render_template('home.html',options=[i.get('category').capitalize() for i in category[::-1]],user=current_user)
 
-@app.route("/summary",methods=["GET"])
+@app.route("/summary",methods=["GET","POST"])
 def summary():
-    #code to make the query and group by to display a table in html
-    return render_template("summary.html",user=current_user)
+    if request.method == 'POST':
+        user_id = current_user.id
+        query = """
+        SELECT category,strftime('%m', time_inserted) as month, SUM(amount) AS tot , strftime('%Y', time_inserted) as year
+        FROM transactions 
+        WHERE user_id = ?
+        GROUP BY category, month
+        HAVING month = ? AND year = ?
+        ORDER BY tot DESC;
+        """
+        month = request.form.get("month")
+        year = request.form.get("year")
+        data = query_db(db,query,user_id,month,year)
+        if not data:
+            flash("No data to display", category="error")
+            return redirect("/summary")
+        categories = [row['category'] for row in data]
+        amounts = [row['tot'] for row in data]
+        fig, fig_mon = create_summary_figures(data, user_id, month, year)
+
+        return render_template("summary.html", user=current_user, result_rows=data, categories=categories,
+                               amounts=amounts,json_char = fig, month_sum = fig_mon)
+
+    user_id = current_user.id
+    #query for the specific month
+    query = """
+            SELECT category,strftime('%m', time_inserted) as month, SUM(amount) AS tot , strftime('%Y', time_inserted) as year
+                FROM transactions 
+                WHERE user_id = ?
+                GROUP BY category, month
+                HAVING month = ? AND year = ?
+                ORDER BY tot DESC;
+            """
+    month = datetime.date.today().strftime("%m")
+    year = datetime.date.today().strftime("%Y")
+    data = query_db(db, query, user_id, month, year)
+    fig, fig_mon = create_summary_figures(data, user_id,month,year)
+    return render_template("summary.html", user=current_user, result_rows=data, json_char = fig, month_sum = fig_mon)
+
 
 if __name__ == '__main__':
     db = "tracker.db"
