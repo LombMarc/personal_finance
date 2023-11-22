@@ -1,6 +1,54 @@
 {% extends "base.html" %} {% block title%}Home{% endblock %}
 {% block content %}
-<div>
-    <h2>Let's see how are you doing</h2>
+<div style="text-align: center; margin-top: 20px;">
+    <form method="POST">
+        <label for="month">Month:</label>
+        <select name="month" id="month">
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+
+        <label for="year">Year:</label>
+        <select name="year" id="year">
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+        </select>
+
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<div style="text-align: center; margin-top: 20px; ">
+    <table border="1" style="margin: auto; width: 60%; padding: 10%;">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in result_rows %}
+                <tr>
+                    <td>{{ row['category'] }}</td>
+                    <td>{{ row['tot'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top: 20px; padding: 5%;">
+    {{ json_char | safe }}
+    {{ month_sum | safe }}
 </div>
 {% endblock %}
