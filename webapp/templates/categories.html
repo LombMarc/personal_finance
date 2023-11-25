@@ -1,0 +1,32 @@
+{% extends "base.html" %} {% block title%}Categories{% endblock %}
+{% block content %}
+<div class="categories" style="flex:1">
+    <div class="add-category">
+        <form method="POST">
+            <h3>Add personal category</h3>
+                <div class="form-group">
+                    <input type="text" class="form-group" id="category_add" name="category_add" placeholder="Your custom category">
+                </div>
+            <button type="submit" name="submit_category" class="btn btn-primary">add category</button>
+        </form>
+    </div>
+</div>
+<div class ="edit-category" style="margin-top:5%;">
+    <form method="POST">
+    <table class="edit-category-table" style="margin-top:5%;">
+    <tr>
+        <th>Your categories</th>
+        <th></th>
+    </tr>
+    {% for category in list_category %}
+        <tr>
+            <td>{{ category }}</td>
+            <td>
+                <button type="submit" name="remove_cat" value="{{ category }}">Remove category</button>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+    </form>
+</div>
+{% endblock %}

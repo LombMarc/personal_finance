@@ -36,6 +36,13 @@ def load_user(user_id):
     return user
 
 def query_db(db,query, *args):
+    """
+    execute query returning a list of dictionary
+    :param db:
+    :param query:
+    :param args:
+    :return:
+    """
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
@@ -58,6 +65,13 @@ def query_db(db,query, *args):
         print("An error occurred when getting data to db: ",e)
 
 def insert_db(db, query, *args):
+    """
+    Used to insert/update values into db
+    :param db:
+    :param query:
+    :param args:
+    :return:
+    """
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
@@ -229,18 +243,71 @@ def home():
             except:
                 flash("Error occurred when inserting data",category="error")
             return redirect(url_for("home"))
-        elif "submit_category" in request.form:
+    return render_template('home.html',options=[i.get('category').capitalize() for i in category[::-1]],user=current_user)
+
+@app.route('/categories',methods=["GET","POST"])
+def categories():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    user_id = current_user.id
+    category = query_db(db,"SELECT category FROM categories AS cat INNER JOIN user_categories AS uca on uca.category_id = cat.id WHERE uca.user_id = ?;",user_id)
+    if request.method=="POST":
+        if "submit_category" in request.form:
             custom_category= request.form.get("category_add")
             if custom_category=="":
                 flash("Insert custom category","error")
+            elif custom_category in [i['category'] for i in category]:
+                flash("category already exist", "error")
             else:
-                insert_db(db,"INSERT INTO categories (category) VALUES (?);",custom_category)
+                #check if the category already exist
+                num = query_db(db, """SELECT COUNT(category_id) as num FROM user_categories WHERE category_id = (
+                                    SELECT id FROM categories WHERE category = ?
+                                );""", custom_category)[0]['num']
+                #insert only if it is not present
+                if num == 0:
+                    insert_db(db,"INSERT INTO categories (category) VALUES (?);",custom_category)
+                #insert into many to many table
                 cat_id = query_db(db,"SELECT id FROM categories WHERE category = ?",custom_category)[0].get('id')
                 insert_db(db, "INSERT INTO user_categories (user_id, category_id) VALUES (?,?);", user_id, cat_id)
-                flash("Custom category inserted","success")
-                return redirect(url_for("home"))
 
-    return render_template('home.html',options=[i.get('category').capitalize() for i in category[::-1]],user=current_user)
+                flash("Custom category inserted","success")
+                return redirect(url_for("categories"))
+
+        if "remove_cat" in request.form:
+            to_remove = request.form.get("remove_cat")
+            #check if the categories is used by just one user
+            num = query_db(db,"""SELECT COUNT(category_id) as num FROM user_categories WHERE category_id = (
+                    SELECT id FROM categories WHERE category = ?
+                );""",to_remove)[0]['num']
+            if num != 1:
+                query = """
+                    DELETE FROM user_categories 
+                    WHERE user_id = ? AND category_id = (
+                        SELECT id FROM categories WHERE category = ?
+                    );
+                """
+                insert_db(db,query,user_id,to_remove)
+                flash("Category removed", "success")
+            elif num == 1:
+
+                query = """
+                            DELETE FROM user_categories 
+                                    WHERE user_id = ? and category_id = (
+                                        SELECT id FROM categories WHERE category = ?
+                                    );
+                                """
+                insert_db(db, query, user_id, to_remove)
+                query = """
+                        DELETE FROM categories
+                        WHERE category = ?
+                """
+                insert_db(db, query, to_remove)
+                flash("Category removed", "success")
+            return redirect("categories")
+
+
+    return render_template('categories.html',list_category = [i.get('category') for i in category] ,user=current_user)
+
 
 @app.route("/summary",methods=["GET","POST"])
 def summary():
