@@ -10,7 +10,6 @@ APP_PATH="home/LombMarc/personal_finance"
 REPO_URL="https://github.com/LombMarc/personal_finance.git"  # Replace with your GitHub repo URL
 
 cd $APP_PATH
-git init
 git pull origin main
 
 echo "deployment complete"
