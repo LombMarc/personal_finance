@@ -1,12 +1,13 @@
 import datetime
 import sqlite3
-import os,sys
-from flask import render_template,request,flash,redirect,url_for
+import os
+from flask import Flask,render_template,request,flash,redirect,url_for, make_response
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,login_required,logout_user,current_user, UserMixin, LoginManager
-from flask import Flask
 import plotly.express as px
 import plotly.offline as opy
+import csv
+from io import StringIO
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -243,6 +244,27 @@ def home():
             except:
                 flash("Error occurred when inserting data",category="error")
             return redirect(url_for("home"))
+        if "download-data" in request.form:
+            query = """
+                    SELECT amount, category, time_inserted
+                    FROM transactions
+                    WHERE user_id = ?;
+                    """
+            res = query_db(db,query,user_id)
+
+            #create in memoty file
+            csv_data = StringIO()
+            #prepare dictionary writer
+            csv_writer = csv.DictWriter(csv_data, fieldnames=res[0].keys())
+            #write headers
+            csv_writer.writeheader()
+            #write data
+            csv_writer.writerows(res)
+
+            response = make_response(csv_data.getvalue())
+            response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
+            response.headers['Content-Type'] = 'text/csv'
+            return response
     return render_template('home.html',options=[i.get('category').capitalize() for i in category[::-1]],user=current_user)
 
 @app.route('/categories',methods=["GET","POST"])
