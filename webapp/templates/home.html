@@ -1,7 +1,6 @@
 {% extends "base.html" %} {% block title%}Home{% endblock %}
 {% block content %}
 <div class="container" style="display:flex">
-<div class="left" style="flex:1; padding-right:5%;">
 <div class="add-expense-form" >
     <form method="POST">
         <h3>Add your expense</h3>
@@ -21,18 +20,6 @@
         <button type="submit" name="submit_expense" class="btn btn-primary">add expense</button>
     </form>
 
-</div>
-</div>
-<div class="categories" style="flex:1">
-    <div class="add-category">
-        <form method="POST">
-            <h3>Add personal category</h3>
-                <div class="form-group">
-                    <input type="text" class="form-group" id="category_add" name="category_add" placeholder="Your custom category">
-                </div>
-            <button type="submit" name="submit_category" class="btn btn-primary">add category</button>
-        </form>
-    </div>
 </div>
 </div>
 {% endblock %}
