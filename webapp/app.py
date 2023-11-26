@@ -8,7 +8,9 @@ from helpers import query_db, insert_db, create_summary_figures, User, create_cs
 app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
+#app configuration
 app.config['SECRET_KEY'] = '1036359838298206420470379712328124'
+app.config['MESSAGE_FLASHING_OPTIONS'] = {'duration': 3}
 db = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tracker.db')
 
 @login_manager.user_loader
@@ -34,14 +36,16 @@ def login():
                 login_user(user,remember=True)
                 return redirect("/")
             else:
-                flash("Wrong email or password",category='error')
+                flash("Wrong username or password",category='error')
         else:
-            flash("Email is not registred",category="error")
+            flash("Username is not registred",category="error")
     return render_template("login.html", user= current_user)
 
 @app.route("/logout")
 @login_required
 def logout():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
     logout_user()
     flash("logged out succesfully",category="success")
     return redirect("/")
@@ -135,7 +139,7 @@ def categories():
                 flash("Insert custom category","error")
             #check if the category was already introduced by the user
             elif custom_category in [i['category'].upper() for i in category]:
-                flash("category already exist", "error")
+                flash("Category already exist", "error")
             else:
                 #check if the category already exist
                 num = query_db(db, """SELECT COUNT(category_id) as num FROM user_categories WHERE category_id = (
@@ -189,6 +193,8 @@ def categories():
 
 @app.route("/summary",methods=["GET","POST"])
 def summary():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
     if request.method == 'POST':
         user_id = current_user.id
         query = """
