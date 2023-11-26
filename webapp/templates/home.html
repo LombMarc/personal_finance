@@ -2,11 +2,12 @@
 {% block content %}
 <div class="container" style="display:flex">
 <div class="add-expense-form" style="flex:0">
-    <form method="POST">
+
         <h3>Add your expense</h3>
-        <div class="form-group">
+        <div class="form-group" >
+        <form method="POST">
         <label for="amount">Amount</label><br>
-        <input type="number" class="form-group" name="expense" id="expense" placeholder="expense or income" style="width:150px;"><br>
+        <input type="number" class="form-group" name="expense" id="expense" placeholder="expense (+) or income (-1)" style="width:250px;"><br>
         <label for="category">category</label><br>
         <select id="category_exp" name="category_exp">
             {% for option in options %}
@@ -25,5 +26,8 @@
     </form>
 
 </div>
+</div>
+<div style="margin-top: 20px; padding: 5%;">
+    {{ month_sum | safe }}
 </div>
 {% endblock %}
