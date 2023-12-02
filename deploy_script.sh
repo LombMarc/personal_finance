@@ -20,8 +20,8 @@ trap'handle_error' ERR
 if [ -d "$APP_PATH" ]; then
   cd $APP_PATH
   #exclude the db from fetched data from remote repo
-  git fetch origin main
-  git checkout origin/main --webapp/tracker.db
+  git fetch
+  git checkout origin/main -- webapp/tracker.db
   git merge origin main
 
 else

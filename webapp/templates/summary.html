@@ -28,25 +28,24 @@
     </form>
 </div>
 
-<div style="text-align: center; margin-top: 20px; ">
-    <table border="1" style="margin: auto; width: 60%; padding: 10%;">
+<div style="text-align: center; margin-top: 20px;">
+    <table border="1" style="margin: auto; width: 60%; padding: 10%; border-collapse: collapse; background-color: white;">
         <thead>
-            <tr>
-                <th>Category</th>
-                <th>Total</th>
+            <tr style="background-color: #f2f2f2; font-weight: bold;">
+                <th style="padding: 10px;">Category</th>
+                <th style="padding: 10px;">Total</th>
             </tr>
         </thead>
         <tbody>
             {% for row in result_rows %}
                 <tr>
-                    <td>{{ row['category'] }}</td>
-                    <td>{{ row['tot'] }}</td>
+                    <td style="padding: 10px;">{{ row['category'] }}</td>
+                    <td style="padding: 10px;">{{ row['tot'] }}</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-
 <div style="margin-top: 20px; padding: 5%;">
     {{ json_char | safe }}
 </div>
