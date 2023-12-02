@@ -4,5 +4,6 @@ CREATE TABLE transactions (
     category TEXT NOT NULL,
     amount FLOAT NOT NULL,
     time_inserted DATE DEFAULT CURRENT_DATE NOT NULL,
+    info TEXT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

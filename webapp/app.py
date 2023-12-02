@@ -101,6 +101,8 @@ def home():
             amount = request.form.get("expense")
             category_exp = request.form.get("category_exp")
             date = request.form.get("dateInsertion")
+            info = request.form.get("descInsertion")
+            print(info)
             if date == "":
                 date = datetime.date.today().strftime("%Y-%m-%d")
             try:
@@ -112,14 +114,14 @@ def home():
                 flash("Insert a number",category="error")
                 return redirect(url_for("home"))
             try:
-                insert_db(db,"INSERT INTO transactions (user_id,category,amount,time_inserted) VALUES (?,?,?,?)",user_id,category_exp,amount,date)
+                insert_db(db,"INSERT INTO transactions (user_id,category,amount,time_inserted,info) VALUES (?,?,?,?,?)",user_id,category_exp,amount,date,info)
                 flash("Transaction inserted", category="success")
             except:
                 flash("Error occurred when inserting data",category="error")
             return redirect(url_for("home"))
         if "download-data" in request.form:
             query = """
-                    SELECT amount, category, time_inserted
+                    SELECT amount, category, time_inserted, info
                     FROM transactions
                     WHERE user_id = ?;
                     """

@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 import plotly.express as px
 import plotly.offline as opy
@@ -164,7 +165,8 @@ def create_csv_file(data):
     csv_writer.writerows(data)
 
     response = make_response(csv_data.getvalue())
-    response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
+
+    response.headers['Content-Disposition'] = f'attachment; filename=data_{datetime.datetime.now().timestamp()}.csv'
     response.headers['Content-Type'] = 'text/csv'
     return response
 
