@@ -238,7 +238,10 @@ def summary():
     month = datetime.date.today().strftime("%m")
     year = datetime.date.today().strftime("%Y")
     data = query_db(db, query, user_id, month, year)
-    fig = create_summary_figures(data, user_id,month,year,db)
+    if len(data) != 0:
+        fig = create_summary_figures(data, user_id,month,year,db)
+    else:
+        fig = ""
     return render_template("summary.html", user=current_user, result_rows=data, json_char = fig)
 
 
