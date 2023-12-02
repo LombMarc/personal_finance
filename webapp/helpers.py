@@ -106,13 +106,16 @@ def create_summary_figures(data,user_id,month,year,db):
     }
     plotly_data = dict_of_list(data)
     fig = px.bar(plotly_data, x='category', y='tot', labels={'tot':'Amount','category':'Categories'})
+    fig.update_traces(marker=dict(color=px.colors.sequential.Rainbow),width=0.4).update_layout(bargap=0.55)
     fig = fig.update_layout(
         title=f'Categories on {month_dict[month]} - {year}',
         xaxis_title='Categories',
-        yaxis_title='amount',
-        showlegend=False
+        yaxis_title='amount'
     )
+
     fig = opy.plot(fig, auto_open=False, output_type='div')
+    '''
+    #month by month summary [removed]
     # General query
     query = """
                 SELECT 
@@ -131,15 +134,18 @@ def create_summary_figures(data,user_id,month,year,db):
                       labels={'cumulative_residual_liquidity': 'Cumulative Residual Liquidity'})
     fig_mon = fig_mon.add_bar(x=monthly_summary['month'], y=monthly_summary['residual_liquidity'],
                               name='Monthly residual')
+
+
+    # Update the layout for legend on top
     fig_mon = fig_mon.update_layout(
         title='Monthly Summary',
         xaxis_title='Month',
         yaxis_title='Liquidity',
-        legend_title='Liquidity Type',
-        showlegend=False
+        showlegend=True,
+        legend=dict( orientation='h', y=1.1)
     )
-    fig_mon = opy.plot(fig_mon, auto_open=False, output_type='div', config={'displayModeBar': False})
-    return fig, fig_mon
+    fig_mon = opy.plot(fig_mon, auto_open=False, output_type='div', config={'displayModeBar': False})'''
+    return fig
 
 
 def create_csv_file(data):
@@ -222,12 +228,13 @@ FROM (
                      labels={'value': 'Residual Liquidity', 'variable': 'Bars'},
                      title='Monthly Summary', barmode='group')
 
+    fig_mon.update_traces(width=0.2).update_layout(bargap=0.55)
     fig_mon = fig_mon.update_layout(
         title='Monthly Summary',
         xaxis_title='Month',
         yaxis_title='Wealth - liquidity',
-        legend_title='Liquidity Type',
-        showlegend=False
+        showlegend=True,
+        legend=dict(title='Liquidity Type', orientation='h', y=1.1)
     )
     fig_mon = opy.plot(fig_mon, auto_open=False, output_type='div', config={'displayModeBar': False})
 

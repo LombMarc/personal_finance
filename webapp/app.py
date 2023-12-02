@@ -105,8 +105,12 @@ def home():
                 date = datetime.date.today().strftime("%Y-%m-%d")
             try:
                 amount = float(amount)
+                if amount == 0:
+                    flash("Insert a number",category="error")
+                    return redirect(url_for("home"))
             except:
                 flash("Insert a number",category="error")
+                return redirect(url_for("home"))
             try:
                 insert_db(db,"INSERT INTO transactions (user_id,category,amount,time_inserted) VALUES (?,?,?,?)",user_id,category_exp,amount,date)
                 flash("Transaction inserted", category="success")
@@ -121,7 +125,10 @@ def home():
                     """
             res = query_db(db,query,user_id)
             return create_csv_file(res)
-    wealth = create_history_figure(user_id,year = datetime.date.today().year,db=db)
+    try:
+        wealth = create_history_figure(user_id,year = datetime.date.today().year,db=db)
+    except:
+        wealth = ""
     return render_template('home.html',options=[i.get('category').capitalize() for i in category[::-1]],user=current_user, month_sum = wealth)
 
 @app.route('/categories',methods=["GET","POST"])
@@ -129,7 +136,7 @@ def categories():
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
     user_id = current_user.id
-    category = query_db(db,"SELECT category FROM categories AS cat INNER JOIN user_categories AS uca on uca.category_id = cat.id WHERE uca.user_id = ?;",user_id)
+    category = query_db(db,"SELECT category, CASE WHEN is_wealth = 0 THEN 'No' ELSE 'Yes' END AS wealth FROM categories AS cat INNER JOIN user_categories AS uca on uca.category_id = cat.id WHERE uca.user_id = ?;",user_id)
     if request.method=="POST":
         if "submit_category" in request.form:
             custom_category= request.form.get("category_add").upper()
@@ -188,7 +195,7 @@ def categories():
             return redirect("categories")
 
 
-    return render_template('categories.html',list_category = [i.get('category').lower().capitalize() for i in category] ,user=current_user)
+    return render_template('categories.html',list_category = [(i.get('category').lower().capitalize(), i.get('wealth')) for i in category] ,user=current_user)
 
 
 @app.route("/summary",methods=["GET","POST"])
@@ -213,10 +220,10 @@ def summary():
             return redirect("/summary")
         categories = [row['category'] for row in data]
         amounts = [row['tot'] for row in data]
-        fig, fig_mon = create_summary_figures(data, user_id, month, year,db=db)
+        fig = create_summary_figures(data, user_id, month, year,db=db)
 
         return render_template("summary.html", user=current_user, result_rows=data, categories=categories,
-                               amounts=amounts,json_char = fig, month_sum = fig_mon)
+                               amounts=amounts,json_char = fig)
 
     user_id = current_user.id
     #query for the specific month
@@ -231,8 +238,8 @@ def summary():
     month = datetime.date.today().strftime("%m")
     year = datetime.date.today().strftime("%Y")
     data = query_db(db, query, user_id, month, year)
-    fig, fig_mon = create_summary_figures(data, user_id,month,year,db)
-    return render_template("summary.html", user=current_user, result_rows=data, json_char = fig, month_sum = fig_mon)
+    fig = create_summary_figures(data, user_id,month,year,db)
+    return render_template("summary.html", user=current_user, result_rows=data, json_char = fig)
 
 
 if __name__ == '__main__':

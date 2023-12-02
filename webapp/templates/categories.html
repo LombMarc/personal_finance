@@ -19,11 +19,15 @@
     <table class="edit-category-table" style="margin-top:5%;">
     <tr>
         <th>Your categories</th>
-        <th></th>
+        <th>&nbsp;&nbsp;&nbsp;</th>
+        <th>Increase wealth</th>
+        <th>&nbsp;&nbsp;&nbsp;</th>
     </tr>
     {% for category in list_category %}
         <tr>
-            <td>{{ category }}</td>
+            <td>{{ category[0] }}</td>
+            <td>&nbsp;&nbsp;&nbsp;</td>
+            <td>{{ category[1] }}</td>
             <td>
                 <button type="submit" name="remove_cat" value="{{ category }}">Remove category</button>
             </td>
