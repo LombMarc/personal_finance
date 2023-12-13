@@ -1,4 +1,5 @@
 import datetime
+import json
 import sqlite3
 import plotly.express as px
 import plotly.offline as opy
@@ -114,40 +115,35 @@ def create_summary_figures(data,user_id,month,year,db):
         yaxis_title='amount'
     )
 
-    fig = opy.plot(fig, auto_open=False, output_type='div')
-    '''
-    #month by month summary [removed]
-    # General query
-    query = """
-                SELECT 
-                  strftime('%m', time_inserted) as month, 
-                  SUM(amount) AS residual_liquidity,
-                  SUM(SUM(amount)) OVER (ORDER BY strftime('%m', time_inserted) ASC) AS cumulative_residual_liquidity
-                FROM transactions 
-                WHERE user_id = ? AND strftime('%Y', time_inserted) = ?
-                GROUP BY month
-                ORDER BY month ASC;
-                    """
-    monthly_summary = dict_of_list(query_db(db, query, user_id,year))
-    monthly_summary['month'] = [month_dict[i] for i in monthly_summary['month']]
-
-    fig_mon = px.line(monthly_summary, x='month', y='cumulative_residual_liquidity', markers=True,
-                      labels={'cumulative_residual_liquidity': 'Cumulative Residual Liquidity'})
-    fig_mon = fig_mon.add_bar(x=monthly_summary['month'], y=monthly_summary['residual_liquidity'],
-                              name='Monthly residual')
-
-
-    # Update the layout for legend on top
-    fig_mon = fig_mon.update_layout(
-        title='Monthly Summary',
-        xaxis_title='Month',
-        yaxis_title='Liquidity',
-        showlegend=True,
-        legend=dict( orientation='h', y=1.1)
-    )
-    fig_mon = opy.plot(fig_mon, auto_open=False, output_type='div', config={'displayModeBar': False})'''
+    fig = opy.plot(fig, auto_open=False, output_type='div', config={'displayModeBar': False, 'displaylogo': False})
     return fig
 
+def summary_data(data):
+    """
+    create figure for summary page
+    :param data:
+    :param user_id:
+    :param month:
+    :param year:
+    :return:
+    """
+    month_dict = {
+        '01': 'January',
+        '02': 'February',
+        '03': 'March',
+        '04': 'April',
+        '05': 'May',
+        '06': 'June',
+        '07': 'July',
+        '08': 'August',
+        '09': 'September',
+        '10': 'October',
+        '11': 'November',
+        '12': 'December'
+    }
+    plotly_data = dict_of_list(data)
+
+    return json.dumps(plotly_data)
 
 def create_csv_file(data):
     """
@@ -220,25 +216,21 @@ FROM (
     ORDER BY year asc, month ASC
 );
     """
-    monthly_summary = dict_of_list(query_db(db, query_liquidity, user_id,str(year)))
+    plotly_data = dict_of_list(query_db(db, query_liquidity, user_id,str(year)))
 
-    '''fig_mon = px.bar(monthly_summary, x='month_year', y='liquidity',
-                      labels={'liquidity': 'Residual Liquidity'})
-    fig_mon = fig_mon.add_bar(x=monthly_summary['month_year'], y=monthly_summary['cumulative_wealth'],name='Wealth')
-    '''
-    fig_mon = px.bar(monthly_summary, x='month_year', y=['liquidity', 'cumulative_wealth'],
+    fig_mon = px.bar(plotly_data, x='month_year', y=['liquidity', 'cumulative_wealth'],
                      labels={'value': 'Residual Liquidity', 'variable': 'Bars'},
                      title='Monthly Summary', barmode='group')
 
-    fig_mon.update_traces(width=0.2).update_layout(bargap=0.55)
+    fig_mon = fig_mon.update_traces(width=0.2).update_layout(bargap=0.55)
     fig_mon = fig_mon.update_layout(
         title='Monthly Summary',
         xaxis_title='Month',
         yaxis_title='Wealth - liquidity',
         showlegend=True,
         legend=dict(title='Liquidity Type', orientation='h', y=1.1)
-    )
-    fig_mon = opy.plot(fig_mon, auto_open=False, output_type='div', config={'displayModeBar': False})
 
-    return fig_mon
+    )
+    return json.dumps(plotly_data)
+
 

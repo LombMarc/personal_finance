@@ -28,7 +28,48 @@
 
 </div>
 </div>
-<div style="margin-top: 20px; padding: 5%;">
-    {{ month_sum | safe }}
-</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"></script>
+
+
+<div style="margin-top: 20px; padding: 5%;" id="plot-container" style="height: 400px;"></div>
+
+<script defer>
+    var plotData = {{ wealth | safe }};
+
+    function updatePlot(data) {
+        // Use Plotly.js to create the plot on the client side
+        trace1 = {
+            x: data['month_year'],
+            y: data['liquidity'],
+            name: 'liquidity',
+            type: 'bar'
+        };
+
+        trace2 = {
+            x: data['month_year'],
+            y: data['cumulative_wealth'],
+            name: 'wealth',
+            type: 'bar'
+        };
+
+        var data = [trace1, trace2];
+
+        var layout = {
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'Wealth & Liquidity' },
+            bargap: 0.55,
+            height: 400,
+            barmode: 'group'
+        };
+
+        Plotly.newPlot('plot-container', data, layout);
+    }
+
+
+    updatePlot(plotData);
+
+
+</script>
 {% endblock %}
