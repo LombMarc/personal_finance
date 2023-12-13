@@ -171,31 +171,31 @@ def categories():
             to_remove = request.form.get("remove_cat").upper()
             #check if the categories is used by just one user
             num = query_db(db,"""SELECT COUNT(category_id) as num FROM user_categories WHERE category_id = (
-                    SELECT id FROM categories WHERE category = ?
-                );""",to_remove)[0]['num']
+                    SELECT id FROM categories WHERE category COLLATE NOCASE = ?
+                );""",eval(to_remove)[0])[0]['num']
+            print(num)
             if num != 1:
                 query = """
                     DELETE FROM user_categories 
                     WHERE user_id = ? AND category_id = (
-                        SELECT id FROM categories WHERE category = ?
+                        SELECT id FROM categories WHERE category COLLATE NOCASE = ?
                     );
                 """
-                insert_db(db,query,user_id,to_remove)
+                insert_db(db,query,user_id,eval(to_remove)[0])
                 flash("Category removed", "success")
             elif num == 1:
-
                 query = """
                             DELETE FROM user_categories 
                                     WHERE user_id = ? and category_id = (
                                         SELECT id FROM categories WHERE category COLLATE NOCASE = ?
                                     );
                                 """
-                insert_db(db, query, user_id, to_remove)
+                insert_db(db, query, user_id, eval(to_remove)[0])
                 query = """
                         DELETE FROM categories
                         WHERE category COLLATE NOCASE = ?
                 """
-                insert_db(db, query, to_remove)
+                insert_db(db, query, eval(to_remove)[0])
                 flash("Category removed", "success")
             return redirect("categories")
 
