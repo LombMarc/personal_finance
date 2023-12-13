@@ -46,7 +46,35 @@
         </tbody>
     </table>
 </div>
-<div style="margin-top: 20px; padding: 5%;">
-    {{ json_char | safe }}
-</div>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"></script>
+
+<div style="margin-top: 20px; padding: 5%;" id="plot-container" style="height: 400px;"></div>
+
+<script defer>
+    var data = {{ category_exp | safe }};
+
+    function updatePlot(data) {
+        var data = [{
+            x: data.category,
+            y: data.tot,
+            type: 'bar',
+            marker: {color: Plotly.d3.scale.category10().range()},
+            width: 0.4
+        }];
+
+        var layout = {
+            xaxis: {title: 'Categories'},
+            yaxis: {title: 'Amount'},
+            bargap: 0.55,
+            height: 400
+        };
+
+        Plotly.newPlot('plot-container', data, layout,{displayModeBar: false});
+    }
+
+    updatePlot(data)
+
+</script>
+
 {% endblock %}

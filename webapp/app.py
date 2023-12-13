@@ -3,7 +3,8 @@ import os
 from flask import Flask,render_template,request,flash,redirect,url_for
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,login_required,logout_user,current_user, LoginManager
-from helpers import query_db, insert_db, create_summary_figures, User, create_csv_file, create_history_figure
+from helpers import query_db, insert_db, create_summary_figures, User, create_csv_file, create_history_figure, summary_data
+from flask_caching import Cache
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -12,6 +13,7 @@ login_manager.init_app(app)
 app.config['SECRET_KEY'] = '1036359838298206420470379712328124'
 app.config['MESSAGE_FLASHING_OPTIONS'] = {'duration': 3}
 db = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tracker.db')
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -90,6 +92,7 @@ def sing_up():
     return render_template("signup.html",user=current_user)
 
 @app.route('/',methods=["GET","POST"])
+@login_required
 def home():
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
@@ -129,9 +132,11 @@ def home():
             return create_csv_file(res)
     try:
         wealth = create_history_figure(user_id,year = datetime.date.today().year,db=db)
-    except:
+
+    except Exception as e:
+        print(e)
         wealth = ""
-    return render_template('home.html',options=[i.get('category').capitalize() for i in category[::-1]],user=current_user, month_sum = wealth)
+    return render_template('home.html',options=[i.get('category').capitalize() for i in category[::-1]],user=current_user, wealth = wealth)
 
 @app.route('/categories',methods=["GET","POST"])
 def categories():
@@ -241,10 +246,10 @@ def summary():
     year = datetime.date.today().strftime("%Y")
     data = query_db(db, query, user_id, month, year)
     if len(data) != 0:
-        fig = create_summary_figures(data, user_id,month,year,db)
+        fig = summary_data(data)
     else:
         fig = ""
-    return render_template("summary.html", user=current_user, result_rows=data, json_char = fig)
+    return render_template("summary.html", user=current_user, result_rows=data, category_exp = fig)
 
 
 if __name__ == '__main__':
