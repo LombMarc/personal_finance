@@ -4,7 +4,6 @@ from flask import Flask,render_template,request,flash,redirect,url_for
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,login_required,logout_user,current_user, LoginManager
 from helpers import query_db, insert_db, create_summary_figures, User, create_csv_file, create_history_figure, summary_data
-from flask_caching import Cache
 
 app = Flask(__name__)
 login_manager = LoginManager()
