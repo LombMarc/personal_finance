@@ -12,7 +12,6 @@ login_manager.init_app(app)
 app.config['SECRET_KEY'] = '1036359838298206420470379712328124'
 app.config['MESSAGE_FLASHING_OPTIONS'] = {'duration': 3}
 db = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tracker.db')
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 @login_manager.user_loader
 def load_user(user_id):
