@@ -51,7 +51,7 @@ def logout():
     return redirect("/")
 
 @app.route("/sign-up",methods=['POST','GET'])
-def sing_up():
+def sign_up():
     if request.method =='POST':
         username = request.form.get('username')
         pw1 = request.form.get('password')
@@ -90,7 +90,6 @@ def sing_up():
     return render_template("signup.html",user=current_user)
 
 @app.route('/',methods=["GET","POST"])
-@login_required
 def home():
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
@@ -248,6 +247,72 @@ def summary():
     else:
         fig = ""
     return render_template("summary.html", user=current_user, result_rows=data, category_exp = fig)
+
+
+@app.route("/account",methods=["GET","POST"])
+def account():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+
+    return render_template("account.html", user=current_user)
+
+
+@app.route("/change_password_endpoint",methods=["GET","POST"])
+def change_password_endpoint():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    password = request.form.get('old_password')
+    new_password = request.form.get('new_password')
+    new_password_c = request.form.get('new_password_c')
+    user = query_db(db, "SELECT id, username, hash FROM users WHERE id = ?", current_user.id)
+    user = User(id=user[0]['id'], username=user[0]['username'], password_hash=user[0]['hash'])
+    if not check_password_hash(user.password_hash, password):
+        flash("Wrong original password", category="error")
+        return redirect(url_for("account"))
+    elif new_password != new_password_c:
+        flash("The confirmation passowrd is different to the password inserted.", category='error')
+    elif not (any(c.isupper() for c in new_password) and
+              any(c.isdigit() for c in new_password) and
+              any(c in '!@#$%^&*()_-+={}[]|\:;"<>,.?/' for c in new_password) and
+              len(new_password) >= 8):
+        flash("Password must contain at least 1 uppercase letter, 1 digit, 1 special character, and be at least 8 characters long.",category='error')
+
+    else:
+        hash = generate_password_hash(new_password)
+        insert_db(db, "UPDATE users SET hash = ? WHERE id = ?", hash, current_user.id)
+        flash("Password changed successfully!", category="success")
+
+    return redirect(url_for("account"))
+
+@app.route("/remove_account_endpoint", methods=["GET","POST"])
+def remove_account_endpoint():
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    user_id = current_user.id
+    logout_user()
+    query_unique_cat = """
+    SELECT DISTINCT category_id
+    FROM user_categories
+    WHERE category_id NOT IN (
+        SELECT category_id
+        FROM user_categories
+        WHERE user_id != ?
+    );
+    """
+
+    cat_id = [i.get("category_id") for i in query_db(db, query_unique_cat,user_id)]
+    insert_db(db,"DELETE FROM user_categories WHERE user_id = ?", user_id)
+    insert_db(db,"DELETE FROM transactions WHERE user_id = ?", user_id)
+    #add placeholder ? in order to process IN condition from lists
+    placeholders = ', '.join(['?' for _ in cat_id])
+    insert_db(db, f"DELETE FROM categories WHERE id IN ({placeholders})", *cat_id)
+    insert_db(db,"DELETE FROM users WHERE id = ?", user_id)
+
+    flash("Acccount removed successfully!", category="success")
+    return redirect(url_for("sign_up"))
+
+
+
 
 
 if __name__ == '__main__':
