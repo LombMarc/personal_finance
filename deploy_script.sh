@@ -46,7 +46,7 @@ else
   sqlite3 webapp/tracker.db < sql/users.sql
   sqlite3 webapp/tracker.db < sql/transaction.sql
   sqlite3 webapp/tracker.db < sql/categories.sql
-  sqlite3 webapp/tracker.db < sql/users_cagegory.sql
+  sqlite3 webapp/tracker.db < sql/users_categories.sql
 
 fi
 echo "Deployment completed succesfully"

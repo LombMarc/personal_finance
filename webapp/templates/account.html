@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% block title %}Account Management{% endblock %}
+{% block content %}
+<div class="container" style="display:flex">
+    <div class="account-management" style="flex:0">
+        <div class="form-group">
+            <form method="POST" action="{{ url_for('change_password_endpoint') }}">
+                <h2>Change Password</h2>
+                <label for="old_password">Old Password:</label>
+                <input type="password" name="old_password" required>
+                <label for="new_password">New Password:</label>
+                <input type="password" name="new_password" required>
+                <label for="new_password_c">Confirm New Password:</label>
+                <input type="password" name="new_password_c" required>
+                <button type="submit" name="action" value="change_password_endpoint">Change Password</button>
+            </form>
+        </div>
+
+        <div class="form-group">
+            <h2>Remove Account</h2>
+            <p>Are you sure you want to remove your account? This action cannot be undone.</p>
+            <button type="button" onclick="confirmRemoval()">Remove Account</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmRemoval() {
+        var isConfirmed = confirm("Are you sure you want to remove your account? This action cannot be undone.");
+        if (isConfirmed) {
+            // Call the backend removal action here
+            console.log("execute action");
+            window.location.href = "/remove_account_endpoint"; // Update this with the correct URL
+        }
+    }
+</script>
+{% endblock %}
