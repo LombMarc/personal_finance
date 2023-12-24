@@ -73,7 +73,9 @@
         Plotly.newPlot('plot-container', data, layout,{displayModeBar: false});
     }
 
-    updatePlot(data)
+    window.onload = function() {
+    updatePlot(data);
+};
 
 </script>
 

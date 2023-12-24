@@ -211,7 +211,7 @@ def summary():
         query = """
         SELECT category,strftime('%m', time_inserted) as month, SUM(amount) AS tot , strftime('%Y', time_inserted) as year
         FROM transactions 
-        WHERE user_id = ?
+        WHERE user_id = ? 
         GROUP BY category, month
         HAVING month = ? AND year = ?
         ORDER BY tot DESC;
@@ -224,10 +224,10 @@ def summary():
             return redirect("/summary")
         categories = [row['category'] for row in data]
         amounts = [row['tot'] for row in data]
-        fig = create_summary_figures(data, user_id, month, year,db=db)
+        fig = summary_data(data)
 
         return render_template("summary.html", user=current_user, result_rows=data, categories=categories,
-                               amounts=amounts,json_char = fig)
+                               amounts=amounts,category_exp = fig)
 
     user_id = current_user.id
     #query for the specific month
