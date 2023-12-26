@@ -85,6 +85,7 @@ def dict_of_list(list_of_dicts):
 
 def create_summary_figures(data,user_id,month,year,db):
     """
+    Not used anymore
     create figure for summary page
     :param data:
     :param user_id:
@@ -127,22 +128,7 @@ def summary_data(data):
     :param year:
     :return:
     """
-    month_dict = {
-        '01': 'January',
-        '02': 'February',
-        '03': 'March',
-        '04': 'April',
-        '05': 'May',
-        '06': 'June',
-        '07': 'July',
-        '08': 'August',
-        '09': 'September',
-        '10': 'October',
-        '11': 'November',
-        '12': 'December'
-    }
     plotly_data = dict_of_list(data)
-
     return json.dumps(plotly_data)
 
 def create_csv_file(data):
@@ -173,20 +159,7 @@ def create_history_figure(user_id,year,db):
     :param year:
     :return:
     """
-    month_dict = {
-        '01': 'January',
-        '02': 'February',
-        '03': 'March',
-        '04': 'April',
-        '05': 'May',
-        '06': 'June',
-        '07': 'July',
-        '08': 'August',
-        '09': 'September',
-        '10': 'October',
-        '11': 'November',
-        '12': 'December'
-    }
+
     query_liquidity = """
     SELECT month_year, liquidity, cumulative_wealth
 FROM (
@@ -216,21 +189,8 @@ FROM (
     ORDER BY year asc, month ASC
 );
     """
+
     plotly_data = dict_of_list(query_db(db, query_liquidity, user_id,str(year)))
-
-    fig_mon = px.bar(plotly_data, x='month_year', y=['liquidity', 'cumulative_wealth'],
-                     labels={'value': 'Residual Liquidity', 'variable': 'Bars'},
-                     title='Monthly Summary', barmode='group')
-
-    fig_mon = fig_mon.update_traces(width=0.2).update_layout(bargap=0.55)
-    fig_mon = fig_mon.update_layout(
-        title='Monthly Summary',
-        xaxis_title='Month',
-        yaxis_title='Wealth - liquidity',
-        showlegend=True,
-        legend=dict(title='Liquidity Type', orientation='h', y=1.1)
-
-    )
     return json.dumps(plotly_data)
 
 
