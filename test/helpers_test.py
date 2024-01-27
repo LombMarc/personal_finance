@@ -1,4 +1,4 @@
-from webapp.helpers import  dict_of_list, create_history_figure, query_db
+from helpers import  dict_of_list, create_history_figure
 from unittest.mock import patch
 import json
 

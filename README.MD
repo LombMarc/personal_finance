@@ -25,3 +25,6 @@ from app import app as application
 ```
 
 #### [Video demo](https://www.youtube.com/watch?v=FIIxFLla-uQ) 
+
+
+to run docker file in detached mode `docker run -d -p 8000:8000 <image-name>`
